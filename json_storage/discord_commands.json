@@ -1,0 +1,61 @@
+[
+  {
+    "name": "send",
+    "description": "send text",
+    "default_member_permissions": "0x0000000000000008",
+    "options": [
+      {
+        "name": "text",
+        "description": "what to say",
+        "type": 3,
+        "required": true
+      },
+      {
+        "name": "channel_id",
+        "description": "channel/user to send to",
+        "type": 3,
+        "required": false
+      }
+    ]
+  },
+  {
+    "name": "draw",
+    "description": "generates art",
+    "options": [
+      {
+        "name": "query",
+        "description": "what to draw",
+        "type": 3,
+        "required": true
+      },
+      {
+        "name": "ai_model",
+        "description": "choose an AI model to use",
+        "type": 3,
+        "required": false,
+        "choices": [
+          {
+            "name": "Counterfeit V2.5 • (default/slow)",
+            "value": "Counterfeit-V2.5"
+          },
+          {
+            "name": "Anime kawai diffusion • (backup/fast)",
+            "value": "Anime-kawai-diffusion"
+          },
+          {
+            "name": "kwi Model",
+            "value": "kwi-model"
+          },
+          {
+            "name": "PixelArt • (slow)",
+            "value": "pixel-art-xl"
+          },
+          {
+            "name": "Stable Diffusion 1.4",
+            "value": "stable-diffusion-1.4"
+          }
+        ]
+      }
+    ]
+  }
+]
