@@ -4,7 +4,7 @@
   "description": "Your Discord bot description",
   "main": "index.js",
   "engines": {
-    "node": "18.18.2"
+    "node": "16.x"
   },
   "scripts": {
     "start": "node index.js"
