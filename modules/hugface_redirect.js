@@ -2,7 +2,7 @@ async function readStreamBody(response) {
   const reader = response.body.getReader();
   const text = new TextDecoder("utf-8");
   let fulltxt = ""
-  
+
   while (true) {
     const { done, value } = await reader.read();
     if (done) {
@@ -60,7 +60,7 @@ async function generate(messages, depth) {
       ]
     };
     bodydata = JSON.stringify(bodydata, null, 2)
-  
+
     const response = await fetch("https://ngoctuanai-chatgptfree.hf.space/api/langchain/tool/agent", {
       "headers": {
         "accept": "text/event-stream",
@@ -81,7 +81,7 @@ async function generate(messages, depth) {
       "mode": "cors",
       "credentials": "omit"
     });
-  
+
     let val = await readStreamBody(response);
     if (val == "Unauthorized - Access token is missing" || val == "Your authentication token has expired. Please try signing in again." || val == "(Err💔r)"){
       console.log("Unauth FAIL DEPTH: ", depth)
