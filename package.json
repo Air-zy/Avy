@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Your Discord bot description",
   "main": "index.js",
+  "engines": {
+    "node": "18.18.2"
+  },
   "scripts": {
     "start": "node index.js"
   },
