@@ -6,6 +6,8 @@ const runserver = require("./webserver.js");
 const main_funcs = require("./functions.js");
 const cmd_funcs = require("./msg_cmds.js");
 
+const chatbot_mod = require("./modules/chatbot_module.js");
+
 // Values
 
 const Discord_Token = process.env.D_BOT_TOKEN
@@ -52,6 +54,29 @@ async function getRandomRomanceAnime() {
   }
 }
 
+async function isTalkingToBot(msg) {
+  const msgtxt = msg.content.toLowerCase();
+  if (
+    msg.channel.type === 1 ||
+    msgtxt.includes(client.user.id) ||
+    msgtxt.includes("everyone") ||
+    msgtxt.includes("i hate") ||
+    msgtxt.includes("i love") ||
+    msgtxt.includes("damn") ||
+    msgtxt.includes(" avy") ||
+    msgtxt.includes("avy ") ||
+    msgtxt.includes("avy,") ||
+    msgtxt.includes("avy.") ||
+    msgtxt.includes("avy!") ||
+    msgtxt == "avy" ||
+    msg.mentions.repliedUser == client.user
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 // Handle Bot
 
 const client = new Client({
@@ -74,6 +99,7 @@ runserver()
 
 client.on("ready", async () => {
   console.log(`[DISCORD BOT] connected ${client.user.tag}`);
+  chatbot_mod.pass_exports(client, discordjs);
   main_funcs.pass_exports(client, discordjs);
   cmd_funcs.pass_exports(client, discordjs);
 
@@ -130,6 +156,14 @@ client.on('messageCreate', async (message) => {
       } else {
         msg_channel.send("```js\n" + `${err.message}` + "```")
       }
+    }
+  } else { // dm
+    const chk = await isTalkingToBot(message);
+    if (chk == true) {
+      if (message.channel.type != 1){
+        console.log(`${message.author.username}: ${message.content}`);
+      }
+      await chatbot_mod.handle_chat(message);
     }
   }
 
