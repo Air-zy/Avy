@@ -101,10 +101,7 @@ function pass_exports(p_client, p_discordjs) {
 }
 
 module.exports = {
-  counterfeitModel,
   handle_interactions,
   pass_exports,
   toText,
-  kwiModel,
-  kosmosModel,
 };
