@@ -2,7 +2,6 @@ const fs = require('fs');
 const axios = require('axios');
 const discordjs = {Client,GatewayIntentBits,Partials,MessageEmbed} = require("discord.js");
 
-const chatbot_module = require("./chatbot_module.js");
 const runserver = require("./webserver.js");
 const main_funcs = require("./functions.js");
 const cmd_funcs = require("./msg_cmds.js");
@@ -53,29 +52,6 @@ async function getRandomRomanceAnime() {
   }
 }
 
-async function isTalkingToBot(msg) {
-  const msgtxt = msg.content.toLowerCase();
-  if (
-    msg.channel.type === 1 ||
-    msgtxt.includes(client.user.id) ||
-    msgtxt.includes("everyone") ||
-    msgtxt.includes("i hate") ||
-    msgtxt.includes("i love") ||
-    msgtxt.includes("damn") ||
-    msgtxt.includes(" avy") ||
-    msgtxt.includes("avy ") ||
-    msgtxt.includes("avy,") ||
-    msgtxt.includes("avy.") ||
-    msgtxt.includes("avy!") ||
-    msgtxt == "avy" ||
-    msg.mentions.repliedUser == client.user
-  ) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 // Handle Bot
 
 const client = new Client({
@@ -100,7 +76,6 @@ client.on("ready", async () => {
   console.log(`[DISCORD BOT] connected ${client.user.tag}`);
   main_funcs.pass_exports(client, discordjs);
   cmd_funcs.pass_exports(client, discordjs);
-  chatbot_module.pass_exports(client, discordjs);
 
   const registeredCmds = await client.application.commands.fetch();
   const commands = JSON.parse(fs.readFileSync('json_storage/discord_commands.json'));
@@ -156,15 +131,6 @@ client.on('messageCreate', async (message) => {
         msg_channel.send("```js\n" + `${err.message}` + "```")
       }
     }
-  } else { // dm
-    const chk = await isTalkingToBot(message);
-    if (chk == true) {
-      if (message.channel.type != 1){
-        console.log(`${message.author.username}: ${message.content}`);
-      }
-      await chatbot_module.handle_chat(message);
-    }
-    //await message.reply("```airzy: avy down until i finish coding :skull:```");
   }
 
   setTimeout(() => {
