@@ -1,7 +1,7 @@
 {
-  "name": "your-bot-name",
+  "name": "avy",
   "version": "1.0.0",
-  "description": "Your Discord bot description",
+  "description": "discord bot",
   "main": "index.js",
   "license": "MIT",
   "engines": {
