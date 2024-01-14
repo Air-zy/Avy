@@ -7,7 +7,7 @@ const discordjs = ({
 
 const runserver = require("./webserver.js");
 
-const Discord_Token = process.env.DBOTKEY;
+const Discord_Token = process.env["DISCORD_TOKEN"];
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
