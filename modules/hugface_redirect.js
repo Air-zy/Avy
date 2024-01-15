@@ -69,7 +69,7 @@ async function generate(messages, depth) {
     };
     bodydata = JSON.stringify(bodydata, null, 2)
     let gpturl = "https://ngoctuanai-chatgptfree.hf.space/api/langchain/tool/agent"
-    if (depth == 3){
+    if (depth == 3){ // fault attempt
       gpturl = "https://ngoctuanai-chatgptfree.hf.space/api/langchain/tool/agent/edge"
     }
     const response = await fetchWithTimeout(gpturl, 10000, {
