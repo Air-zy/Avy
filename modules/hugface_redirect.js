@@ -72,6 +72,25 @@ async function generate(messages, depth) {
     if (depth == 3){ // fault attempt
       gpturl = "https://ngoctuanai-chatgptfree.hf.space/api/langchain/tool/agent/edge"
     }
+    if (depth <= 3){ // fault attempt 2
+      bodydata = {
+      "messages": messages.slice(0, 10),
+      "stream": true,
+      "model": "gpt-3.5-turbo",
+      "temperature": 0.8,
+      "presence_penalty": 0.5,
+      "frequency_penalty": 0.2,
+      "top_p": 0.8,
+      "baseUrl": "/api/openai/",
+      "maxIterations": 1, //n ?
+      "returnIntermediateSteps": true,
+      "useTools": [
+        "web-search",
+        "calculator",
+        "web-browser"
+      ]
+    };
+    }
     const response = await fetchWithTimeout(gpturl, 10000, {
       "headers": {
         "accept": "text/event-stream",
