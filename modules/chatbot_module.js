@@ -30,9 +30,6 @@ function getAutherName(author) {
   } else {
     auther_name = author.username
   }
-  if (auther_name.match(/^[^\d#]+/) && auther_name.match(/^[^\d#]+/)[0]){
-    auther_name = auther_name.match(/^[^\d#]+/)[0];
-  }
   if (auther_name.length < 1){
     auther_name = "???";
   }
@@ -53,7 +50,7 @@ function messageContentFilter(msg){
   }
 
   if (msg.mentions.repliedUser) {
-    msgcontent = "[replying to " + getAutherName(msg.mentions.repliedUser) + "] " + msgcontent
+    msgcontent = "hey @" + getAutherName(msg.mentions.repliedUser) + " " + msgcontent
   }
 
   return msgcontent
@@ -61,9 +58,6 @@ function messageContentFilter(msg){
 
 async function filterresponse(txt) {
   txt = txt.substring(0, 2000);
-
-  //removes [replying to name]
-  txt = txt.replace(/\[(?=.*?replying).*?\]/g, "");
 
   //removes avy double occurances
   txt = txt.replace(/avy: /gi, "");
