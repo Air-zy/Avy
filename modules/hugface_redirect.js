@@ -82,7 +82,7 @@ async function generate(messages, depth) {
         "frequency_penalty": 0.2,
         "top_p": 0.8,
         "baseUrl": "/api/openai/",
-        "maxIterations": 1, //n ?
+        "maxIterations": 10, //n ?
         "returnIntermediateSteps": true,
         "useTools": [
           "web-search",
