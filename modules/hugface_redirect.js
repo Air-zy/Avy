@@ -40,7 +40,7 @@ async function generate(messages, depth) {
       "stream": true,
       "model": "gpt-3.5-turbo",
       "temperature": 0.7,
-      "presence_penalty": 0,
+      "presence_penalty": 0.5,
       "frequency_penalty": 0.5,
       "top_p": 0.8,
       "baseUrl": "/api/openai/",
