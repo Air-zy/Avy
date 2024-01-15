@@ -66,15 +66,10 @@ async function filterresponse(txt) {
 }
 
 // Main
-
-let instructs;
-let convhistory;
 const AIName = "Avy";
 
 // Avoid embarrassment
-const parts = process.env['SystemPrompt'].replace(/CHAR/g, AIName).split("<conversation_history>");
-instructs = parts[0].trim();
-convhistory = parts[1].trim();
+const coreprompt = process.env['SystemPrompt'].replace(/CHAR/g, AIName)
 
 const apiurl = 'https://api.wzunjh.top/v1/chat/completions'
 const headers = {
@@ -90,9 +85,7 @@ async function send_msg(history){
 async function handle_chat(message) {
   try {
     let auther_name = getAutherName(message.author);
-    const sysprompt = `${instructs}\n${convhistory}`.replace(/\?\?\?/g, auther_name)
-    //console.log(sysprompt);
-    //const sysprompt = `${instructs}\n`.replace(/\?\?\?/g, auther_name)
+    const sysprompt = coreprompt.replace(/\?\?\?/g, auther_name)
     const mChannel = message.channel;
     const history = [
       {
