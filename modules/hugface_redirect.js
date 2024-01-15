@@ -1,15 +1,8 @@
-async function readStreamBody(response) {
-  const reader = response.body.getReader();
-  const text = new TextDecoder("utf-8");
-  let fulltxt = ""
+const fetch = require('node-fetch');
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
-    fulltxt = fulltxt + text.decode(value);
-  }
+async function readStreamBody(response) {
+  // Read the entire response as text
+  const fulltxt = await response.text();
 
   // Use regular expression to extract JSON-like strings
   const jsonRegex = /{[^}]+}/g;
@@ -27,7 +20,7 @@ async function readStreamBody(response) {
 
   let messagesString = '';
   for (let i = 0; i < jsonArray.length; i++) {
-    if (jsonArray[i].isSuccess != true || jsonArray[i].isToolMessage != false){
+    if (jsonArray[i].isSuccess !== true || jsonArray[i].isToolMessage !== false) {
       console.log(jsonArray[i]);
       messagesString += "(Err💔r)";
     } else {
@@ -36,7 +29,7 @@ async function readStreamBody(response) {
   }
 
   // Remove trailing space
- // messagesString = messagesString.trim();
+  // messagesString = messagesString.trim();
   return messagesString;
 }
 
