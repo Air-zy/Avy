@@ -68,7 +68,11 @@ async function generate(messages, depth) {
       ]
     };
     bodydata = JSON.stringify(bodydata, null, 2)
-    const response = await fetchWithTimeout("https://ngoctuanai-chatgptfree.hf.space/api/langchain/tool/agent", 10000, {
+    let gpturl = "https://ngoctuanai-chatgptfree.hf.space/api/langchain/tool/agent"
+    if (depth == 3){
+      gpturl = "https://ngoctuanai-chatgptfree.hf.space/api/langchain/tool/agent/edge"
+    }
+    const response = await fetchWithTimeout(gpturl, 10000, {
       "headers": {
         "accept": "text/event-stream",
         "accept-language": "en-CA,en-GB;q=0.9,en-US;q=0.8,en;q=0.7",
