@@ -39,7 +39,13 @@ function fetchWithTimeout(url, timeout, stuff) {
     new Promise((_, reject) =>
       setTimeout(() => reject(new Error('Timeout')), timeout)
     ),
-  ]);
+  ]).catch(error => {
+    if (error.message === 'Timeout') {
+      // Handle timeout, e.g., return undefined or perform other actions
+      return undefined;
+    }
+    throw error; // Re-throw other errors
+  });
 }
 
 async function generate(messages, depth) {
