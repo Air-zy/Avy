@@ -33,6 +33,15 @@ async function readStreamBody(response) {
   return messagesString;
 }
 
+function fetchWithTimeout(url, timeout, stuff) {
+  return Promise.race([
+    fetch(url, stuff),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout')), timeout)
+    ),
+  ]);
+}
+
 async function generate(messages, depth) {
   if (depth != 0){
     let bodydata = {
@@ -53,8 +62,7 @@ async function generate(messages, depth) {
       ]
     };
     bodydata = JSON.stringify(bodydata, null, 2)
-
-    const response = await fetch("https://ngoctuanai-chatgptfree.hf.space/api/langchain/tool/agent", {
+    const response = await fetchWithTimeout("https://ngoctuanai-chatgptfree.hf.space/api/langchain/tool/agent", 10000, {
       "headers": {
         "accept": "text/event-stream",
         "accept-language": "en-CA,en-GB;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -75,12 +83,16 @@ async function generate(messages, depth) {
       "credentials": "omit"
     });
 
-    let val = await readStreamBody(response);
-    if (val == "Unauthorized - Access token is missing" || val == "Your authentication token has expired. Please try signing in again." || val == "(Err💔r)"){
-      console.log("Unauth FAIL DEPTH: ", depth)
-      val = generate(messages, depth-1)
+    if (response && response.body) {
+      let val = await readStreamBody(response);
+      if (val == "Unauthorized - Access token is missing" || val == "Your authentication token has expired. Please try signing in again." || val == "(Err💔r)"){
+        console.log("Unauth FAIL DEPTH: ", depth)
+        val = generate(messages, depth-1)
+      }
+      return val;
+    } else {
+      return "[eror2]"
     }
-    return val;
   } else {
     return "[eror]"
   }
