@@ -97,7 +97,9 @@ async function generate(messages, depth) {
       }
       return val;
     } else {
-      return "[eror2]"
+      console.log("Timeout FAIL DEPTH: ", depth)
+      let val = generate(messages, depth-1)
+      return val;
     }
   } else {
     return "[eror]"
