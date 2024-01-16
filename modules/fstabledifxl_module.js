@@ -1,14 +1,30 @@
 const fetch = require('node-fetch');
+const whitelist_characters = [' ', '.', ',', ';', ':', '!', '?', '"'];
+
+function insert_string(input, fill_character) {
+    let result = fill_character;
+
+    for (let char of input) {
+        if (whitelist_characters.includes(char)) {
+            result += fill_character + char + fill_character;
+        } else {
+            result += char;
+        }
+    }
+
+    result += fill_character;
+    return result;
+}
 
 async function generate(input) {
   let bodydata = {
-      "inputs": input + '\u2800', // funny bypass
+      "inputs": insert_string(input, '\u2800'), // funny bypass
       "options": {
           "negative_prompt": "",
-          "width": 1024,
-          "height": 1024,
-          "guidance_scale": 7,
-          "num_inference_steps": 35
+          "width": 1028,
+          "height": 1028,
+          "guidance_scale": 7.5,
+          "num_inference_steps": 50,
       }
   };
   
@@ -19,8 +35,12 @@ async function generate(input) {
   });
 
   const njson = await response.json();
-  const url = `https://huggingface.co/datasets/enzostvs/stable-diffusion-tpu-generations/resolve/main/${njson.image.file_name}.png`
-  return url
+  if (njson && njson.image){
+    const url = `https://huggingface.co/datasets/enzostvs/stable-diffusion-tpu-generations/resolve/main/${njson.image.file_name}.png`
+    return url
+  } else {
+     return response.text()
+  }
 }
 
 module.exports = {
