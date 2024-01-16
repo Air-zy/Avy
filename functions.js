@@ -1,5 +1,10 @@
 let client;
 
+const fs = require('fs');
+const imgnamewatermark = JSON.parse(fs.readFileSync('json_storage/configs.json'))[0].img_name_stamp;
+
+const fstabledifxl = require("./modules/fstabledifxl_module.js");
+
 // Functions
 
 function toText(value) {
@@ -69,10 +74,48 @@ async function command_say(interaction, options) {
   }
 }
 
+const animationFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+let currentFrame = 0;
+async function command_draw(interaction, options) {
+  const input = toText(options.get('prompt').value).substring(0, 512)
+  const reply = await interaction.reply('drawing ' + input);
+  const interval = setInterval(async () => {
+    try {
+      currentFrame = (currentFrame + 1) % animationFrames.length;
+      await reply.edit('drawing ' + input + ' ' + animationFrames[currentFrame]);
+    } catch (err) {
+      clearInterval(interval);
+      return;
+    }
+  }, 1000);
+  
+  try {
+    const response = await fstabledifxl.generate(input);
+    clearInterval(interval);
+    if (response) {
+      await reply.edit({
+      content: input,
+        files: [{
+          attachment: response,
+          name: input.substring(0, 64) + imgnamewatermark + '.png'
+        }]
+      })
+    } else {
+      await reply.edit({
+        content: "FAILED",
+      })
+    }
+  } catch (error) {
+    clearInterval(interval);
+    throw new error;
+  }
+}
+  
 async function handle_interactions(interaction) {
   try {
     const { commandName, options, user } = interaction;
     if (commandName == "draw") {
+      await command_draw(interaction, options);
     } else if (commandName == "send") {
       await command_say(interaction, options);
     }
