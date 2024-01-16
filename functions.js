@@ -93,6 +93,7 @@ async function command_draw(interaction, options) {
     const response = await fstabledifxl.generate(input);
     clearInterval(interval);
     if (response) {
+      console.log("[fstabledifxl] " + input)
       await reply.edit({
       content: input,
         files: [{
@@ -107,7 +108,7 @@ async function command_draw(interaction, options) {
     }
   } catch (error) {
     clearInterval(interval);
-    throw new error;
+    throw error;
   }
 }
   
