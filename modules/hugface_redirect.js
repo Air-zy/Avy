@@ -53,7 +53,7 @@ async function generate(messages, depth) {
     let bodydata = {
       "messages": messages,
       "stream": true,
-      "model": "gpt-3.5-turbo",
+      "model": "gpt-3.5-turbo-1106",
       "temperature": 0.8,
       "presence_penalty": 0.5,
       "frequency_penalty": 0.2,
@@ -76,7 +76,7 @@ async function generate(messages, depth) {
       bodydata = {
         "messages": messages,
         "stream": true,
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-3.5-turbo-1106",
         "temperature": 0.8,
         "presence_penalty": 0.5,
         "frequency_penalty": 0.2,
