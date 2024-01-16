@@ -23,8 +23,8 @@ async function generate(input) {
           "negative_prompt": "",
           "width": 1028,
           "height": 1028,
-          "guidance_scale": 7.5,
-          "num_inference_steps": 50,
+          "guidance_scale": 1,
+          "num_inference_steps": 35,
       }
   };
   
@@ -39,7 +39,7 @@ async function generate(input) {
     const url = `https://huggingface.co/datasets/enzostvs/stable-diffusion-tpu-generations/resolve/main/${njson.image.file_name}.png`
     return url
   } else {
-     return response.text()
+    return response.text()
   }
 }
 
