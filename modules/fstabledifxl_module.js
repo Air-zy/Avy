@@ -20,7 +20,7 @@ async function generate(input) {
   let bodydata = {
       "inputs": insert_string(input, '\u2800'), // funny bypass
       "options": {
-          "negative_prompt": "ugly, mucky",
+          "negative_prompt": "",
           "width": 1028,
           "height": 1028,
           "guidance_scale": 1,
