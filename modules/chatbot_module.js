@@ -125,7 +125,11 @@ async function handle_chat(message) {
 
     let response = await filterresponse(resposeTxt);
     if (response && hasCharacter(response)){
-      mChannel.send(response);
+      if (mChannel.type == 1){ // dm
+        mChannel.send(response);
+      } else {
+        message.reply(response);
+      }
     } else {
       response = "."
       message.reply(response);
