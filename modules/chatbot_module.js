@@ -50,7 +50,7 @@ function messageContentFilter(msg){
   }
 
   if (msg.mentions.repliedUser) {
-    msgcontent = "hey @" + getAutherName(msg.mentions.repliedUser) + " " + msgcontent
+    msgcontent = "@" + getAutherName(msg.mentions.repliedUser) + " " + msgcontent
   }
 
   return msgcontent
