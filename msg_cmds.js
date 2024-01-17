@@ -284,6 +284,10 @@ async function handle_cmds(message) {
           }
         }
         trackurl(url, 6); // DEPTH
+      } else {
+        const initialmsg = await mchannel.send({
+          content: "```js\nUnknown\n```",
+        });
       }
     }
     //
