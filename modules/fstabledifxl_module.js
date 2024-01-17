@@ -20,7 +20,7 @@ async function generate(input) {
   let bodydata = {
       "inputs": insert_string(input, '\u2800'), // funny bypass
       "options": {
-          "negative_prompt": "",
+          "negative_prompt": "ugly, mucky",
           "width": 1028,
           "height": 1028,
           "guidance_scale": 1,
@@ -39,7 +39,7 @@ async function generate(input) {
     const url = `https://huggingface.co/datasets/enzostvs/stable-diffusion-tpu-generations/resolve/main/${njson.image.file_name}.png`
     return url
   } else {
-    return response.text()
+    return njson
   }
 }
 
