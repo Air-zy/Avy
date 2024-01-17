@@ -129,7 +129,7 @@ async function handle_chat(message) {
     } else {
       response = "."
       message.reply(response);
-      console.log("[ERR EMPTY RESPONSE] ", response, drawing)
+      console.log("[ERR EMPTY RESPONSE] ", response)
     }
 
   } catch (err) { 
