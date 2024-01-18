@@ -49,7 +49,7 @@ function messageContentFilter(msg){
     msgcontent = msgcontent.replace(pingRegex, `@${getAutherName(mentionuser)}`);
   }
 
-  if (msg.mentions.repliedUser) {
+  if (msg.mentions.repliedUser && client.user.id != msg.mentions.repliedUser.id) {
     msgcontent = "@" + getAutherName(msg.mentions.repliedUser) + " " + msgcontent
   }
 
