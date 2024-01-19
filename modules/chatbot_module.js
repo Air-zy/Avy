@@ -9,11 +9,13 @@ const axios = require('axios');
 const configData = JSON.parse(fs.readFileSync('json_storage/configs.json'));
 const imgnamewatermark = configData[0].img_name_stamp
 const main_funcs = require("../functions");
-const new_generator = require("./hugface_redirect.js");
+const old_generator = require("./hugface_redirect.js");
+const new_generator = require("./open_ai.js");
 
 // Functions
 
 newGenerate = new_generator.generate
+oldGenerate = old_generator.generate
 toText = main_funcs.toText;
 
 const hasCharacter = (inputString) => {
@@ -78,8 +80,18 @@ const headers = {
 };
 
 async function send_msg(history){
-  const response = await newGenerate(history, 4)
-  return response
+  //const response = await newGenerate(history, 4)
+  try {
+    const response = await newGenerate(history)
+    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("sorry,")) { 
+      throw "Error";
+    }
+    return response
+  } catch (err) { 
+    console.log("[OEPN AI FAIL]: ", err)
+    const response = await oldGenerate(history, 4)
+    return response
+  }
 }
 
 async function handle_chat(message) {
@@ -102,7 +114,7 @@ async function handle_chat(message) {
         history.push(
           {
             role: 'assistant',
-            content: msg_content
+            content: AIName + ": " + msg_content
           }
         );
       } else {
