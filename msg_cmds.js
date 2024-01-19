@@ -34,6 +34,29 @@ function reverseLines(originalString) {
   return reversedString;
 }
 
+async function getDiscordUser(str) {
+  let newstr = str
+  newstr = newstr.replace(/[<@!>]/g, '');
+  console.log(newstr);
+
+  // Check if the string is a numeric value
+  if (!/^\d+$/.test(newstr)) {
+    return false;
+  }
+
+  // Check if the length of the string is exactly 18 characters
+  if (newstr.length < 17 || newstr.length > 20) {
+    return false;
+  }
+  
+  try {
+    const user = await client.users.fetch(newstr);
+    return user;
+  } catch {
+    return false;
+  }
+}
+
 async function handle_cmds(message) {
   const words = message.content.split(" ");
   const mchannel = message.channel;
@@ -267,7 +290,7 @@ async function handle_cmds(message) {
                 logtxt = logtxt + `\n//CTYPE: ${contentType}`;
                 if (
                   contentType &&
-                  contentType.startsWith("application/octet-stream")
+                  (contentType.startsWith("application/octet-stream") || contentType.startsWith("application/zip"))
                 ) {
                   logtxt = logtxt + `\n[DOWNLOAD]`;
                 }
@@ -286,8 +309,14 @@ async function handle_cmds(message) {
         trackurl(url, 6); // DEPTH
       } else {
         const initialmsg = await mchannel.send({
-          content: "```js\nUnknown\n```",
+          content: "```js\n" + words[1] + "\n```",
         });
+        const found_user = await getDiscordUser(words[1])
+        if (found_user) {
+          initialmsg.edit({
+            content: "```js\n" + toText(found_user) + "\n```",
+          });
+        }
       }
     }
     //
