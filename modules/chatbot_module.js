@@ -14,9 +14,9 @@ const new_generator = require("./open_ai.js");
 
 // Functions
 
-newGenerate = new_generator.generate
-oldGenerate = old_generator.generate
-toText = main_funcs.toText;
+const newGenerate = new_generator.generate
+const oldGenerate = old_generator.generate
+const toText = main_funcs.toText;
 
 const hasCharacter = (inputString) => {
   // Regular expression to check if the string contains at least one character
@@ -51,7 +51,7 @@ function messageContentFilter(msg){
     msgcontent = msgcontent.replace(pingRegex, `@${getAutherName(mentionuser)}`);
   }
 
-  if (msg.mentions.repliedUser && client.user.id != msg.mentions.repliedUser.id) {
+  if (msg.mentions.repliedUser && client.user.id != msg.mentions.repliedUser.id && client.user.id != msg.author.id) {
     msgcontent = "@" + getAutherName(msg.mentions.repliedUser) + " " + msgcontent
   }
 
@@ -82,9 +82,13 @@ const headers = {
 async function send_msg(history){
   //const response = await newGenerate(history, 4)
   try {
-    const response = await newGenerate(history)
+    let response = await newGenerate(history, "gpt-3.5-turbo-1106")
     if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("sorry,")) { 
-      throw "Error";
+      console.log("[open_ai fail 1]" + response)
+      response = await newGenerate(history, "gpt-3.5-turbo")
+    }
+    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("sorry,")) {
+      throw "Error " + response;
     }
     return response
   } catch (err) { 
@@ -105,7 +109,7 @@ async function handle_chat(message) {
         content: sysprompt
       },
     ];
-    let prevmessages = await message.channel.messages.fetch({ limit: 21 });
+    let prevmessages = await message.channel.messages.fetch({ limit: 17 });
     prevmessages = prevmessages.reverse();
     prevmessages.forEach((msg) => {
       //let msg_content = messageContentFilter(msg).substring(0, 256);
@@ -143,8 +147,8 @@ async function handle_chat(message) {
         message.reply(response);
       }
     } else {
-      response = "."
-      message.reply(response);
+      //response = "."
+      //message.reply(response);
       console.log("[ERR EMPTY RESPONSE] ", response)
     }
 
