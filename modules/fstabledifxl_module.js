@@ -23,7 +23,7 @@ async function generate(input) {
           "negative_prompt": "",
           "width": 1028,
           "height": 1028,
-          "guidance_scale": 1,
+          "guidance_scale": 12,
           "num_inference_steps": 35,
       }
   };
