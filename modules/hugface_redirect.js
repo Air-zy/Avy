@@ -56,7 +56,7 @@ async function generate(messages, depth) {
       "model": "gpt-3.5-turbo-1106",
       "temperature": 0.8,
       "presence_penalty": 0.5,
-      "frequency_penalty": 0.8,
+      "frequency_penalty": 1,
       "top_p": 0.8,
       "baseUrl": "/api/openai/",
       "maxIterations": 1, //n ?
@@ -122,12 +122,12 @@ async function generate(messages, depth) {
       }
       return val;
     } else {
-      console.log("Timeout FAIL DEPTH: ", depth)
+      console.log("Timeout FAIL DEPTH: ", depth, response)
       let val = generate(messages, depth-1)
       return val;
     }
   } else {
-    return "[eror]"
+    return "" // error
   }
 }
 
