@@ -3,12 +3,13 @@ const axios = require('axios');
 const discordjs = {Client,GatewayIntentBits,Partials,MessageEmbed} = require("discord.js");
 
 const runserver = require("./webserver.js");
+const heartpump = require("./heart.js");
 const main_funcs = require("./functions.js");
 const cmd_funcs = require("./msg_cmds.js");
 
 const chatbot_mod = require("./modules/chatbot_module.js");
 
-// Values
+// Valuess
 
 const Discord_Token = process.env.D_BOT_TOKEN
 const cmdprefix = JSON.parse(fs.readFileSync('json_storage/configs.json'))[0].prefix;
@@ -96,6 +97,7 @@ client.login(Discord_Token).catch(err => {
   //process.exit();
 });
 runserver()
+heartpump()
 
 client.on("ready", async () => {
   console.log(`[DISCORD BOT] connected ${client.user.tag}`);
