@@ -63,6 +63,10 @@ async function filterresponse(txt) {
 
   //removes avy double occurances
   txt = txt.replace(/avy: /gi, "");
+  txt = txt.replace(/{{avy}}: /gi, "");
+  
+  //artifacts
+  txt = txt.replace(/{{/gi, "");
   
   return txt
 }
@@ -82,12 +86,12 @@ const headers = {
 async function send_msg(history){
   //const response = await newGenerate(history, 4)
   try {
-    let response = await newGenerate(history, "gpt-3.5-turbo-1106")
-    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("sorry,")) { 
+    let response = await newGenerate(history, "gpt-3.5-turbo")
+    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("assist with")) { 
       console.log("[open_ai fail 1]" + response)
-      response = await newGenerate(history, "gpt-3.5-turbo")
+      response = await newGenerate(history, "gpt-3.5-turbo-1106")
     }
-    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("sorry,")) {
+    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("assist with")) {
       throw "Error " + response;
     }
     return response
