@@ -8,6 +8,8 @@ const fs = require("fs");
 const os = require("os");
 
 const main_funcs = require("./functions.js");
+const oai_module = require("./modules/open_ai.js");
+const getusage = oai_module.getusage
 const toText = main_funcs.toText;
 
 // Values
@@ -212,11 +214,21 @@ async function handle_cmds(message) {
       embeds: [newEmbed],
     });
     //
+  } else if (words[0] == cmdprefix + "replyc" && words[2]) {
+    const channel = await client.channels.fetch(words[1].replace(/\D/g, ""));
+    if (channel) {
+      const messages = await channel.messages.fetch({ limit: 2 });
+      const latestMessage = messages.last();
+      await latestMessage.reply(words[2]);
+    } else {
+      await message.reply(`no channel found`);
+    }
   } else if (
     message.content == cmdprefix + "info" ||
     message.content == cmdprefix + "stats"
   ) {
     const uptimeValue = formatUptime(client.uptime);
+    //let infojson = JSON.parse(fs.readFileSync('json_storage/info.json', 'utf-8'));
     const newEmbed = new discordjs.EmbedBuilder().setColor("#DC143C").addFields(
       { name: "Bot ID", value: client.user.id, inline: false },
       {
@@ -247,7 +259,8 @@ async function handle_cmds(message) {
           " MB",
         inline: true,
       },
-      { name: "Uptime", value: uptimeValue, inline: false }
+      { name: "Uptime", value: uptimeValue, inline: false },
+      { name: "Token_Usage", value: toText(getusage()), inline: false }
     );
     /*.setDescription(`
         **hi**
