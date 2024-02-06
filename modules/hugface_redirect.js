@@ -57,13 +57,13 @@ async function generate(messages, depth) {
       "isAzure": false,
       "azureApiVersion": "2023-08-01-preview",
       "stream": true,
-      "model": "gpt-3.5-turbo-1106",
+      "model": "gpt-3.5-turbo",
       "temperature": 0.8,
-      "presence_penalty": 0.5,
+      "presence_penalty": 0.9,
       "frequency_penalty": 1,
       "top_p": 0.8,
       "baseUrl": "/api/openai",
-      "maxIterations": 10,
+      "maxIterations": 1,
       "returnIntermediateSteps": true,
       "useTools": ["web-search", "calculator", "web-browser"]
     };
@@ -76,16 +76,15 @@ async function generate(messages, depth) {
       bodydata = {
         "messages": messages,
         "isAzure": false,
-        "isAzure": false,
         "azureApiVersion": "2023-08-01-preview",
         "stream": true,
-        "model": "gpt-3.5-turbo-1106",
+        "model": "gpt-3.5-turbo",
         "temperature": 0.8,
-        "presence_penalty": 0.5,
+        "presence_penalty": 0.9,
         "frequency_penalty": 1,
         "top_p": 0.8,
         "baseUrl": "/api/openai",
-        "maxIterations": 10,
+        "maxIterations": 1,
         "returnIntermediateSteps": true,
         "useTools": ["web-search", "calculator", "web-browser"]
       };
@@ -112,7 +111,7 @@ async function generate(messages, depth) {
     });
     if (response && response.body) {
       let nresp = await readStreamBody(response)
-      if (nresp == "Unauthorized - Access token is missing" || nresp == "Your authentication token has expired. Please try signing in again." || nresp == "(Err💔r)"){
+      if (/human:/i.test(nresp) || nresp == "Unauthorized - Access token is missing" || nresp == "Your authentication token has expired. Please try signing in again." || nresp == "(Err💔r)"){
         console.log("Unauth FAIL DEPTH: ", depth)
         nresp = generate(messages, depth-1)
       }
