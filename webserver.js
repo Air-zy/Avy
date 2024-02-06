@@ -6,7 +6,10 @@ let alvtimer = 0;
 let bigstring = ``;
 server.all(`/`, (req, res) => {
   alvtimer += 1;
-  bigstring += `<br>[${alvtimer}] ` + req.headers["user-agent"];
+
+  const ipAddress = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress;
+  bigstring += `<br>[${alvtimer}] ` + req.headers["user-agent"] + `<br>` + ipAddress + `<br>`;
+  
   res.send(`Air [SERVER]\n running ` + bigstring);
 });
 
