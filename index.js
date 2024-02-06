@@ -21,6 +21,26 @@ async function getRandomRomanceAnime() {
   const romance_animes = [];
   for (let i = 1; i <= 4; i++) {
     try {
+      const response2 = await axios.get('https://api.jikan.moe/v4/top/anime', {
+        params: {
+          filter: 'bypopularity',
+          rating: 'r17',
+          sfw: true,
+          limit: 25,
+          page: i
+        },
+      });
+
+      const animeList2 = response2.data.data;
+      for (const anime of animeList2) {
+        const hasRomance = anime.genres.some(genre => genre.name == "Romance");
+        if ((hasRomance && anime.score > 7.9) || anime.year > 2020) {
+          romance_animes.push(anime);
+        }
+      }
+      
+      //
+      
       const response = await axios.get('https://api.jikan.moe/v4/top/anime', {
         params: {
           filter: 'bypopularity',
@@ -33,19 +53,20 @@ async function getRandomRomanceAnime() {
 
       const animeList = response.data.data;
       for (const anime of animeList) {
-        const hasDesiredGenre = anime.genres.some(genre => genre.name === "Romance");
-        if (hasDesiredGenre && anime.score > 7.9) {
+        const hasRomance = anime.genres.some(genre => genre.name == "Romance");
+        if ((hasRomance && anime.score > 7.9) || anime.year > 2021) {
           romance_animes.push(anime);
         }
       }
     } catch (err) {
-
+      console.log("[JIKAN ANIME ERR] " + err)
     }
   }
 
   if (romance_animes.length > 0) {
     const chosen_anime = romance_animes[Math.floor(Math.random() * romance_animes.length)]
     let title = chosen_anime.title;
+    console.log(chosen_anime.title)
     if (chosen_anime.title_english && chosen_anime.title_english.length > 0){
       title = chosen_anime.title_english
     }
