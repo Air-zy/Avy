@@ -4,6 +4,7 @@ const fs = require('fs');
 const imgnamewatermark = JSON.parse(fs.readFileSync('json_storage/configs.json'))[0].img_name_stamp;
 
 const fstabledifxl = require("./modules/fstabledifxl_module.js");
+const kwimodule = require("./modules/hf_kwi.js");
 
 // Functions
 
@@ -75,6 +76,7 @@ async function command_say(interaction, options) {
 }
 
 const animationFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+const kwi_trigger_regex = new RegExp(process.env['kwi_trigger'], 'i');
 let currentFrame = 0;
 async function command_draw(interaction, options) {
   const input = toText(options.get('prompt').value).substring(0, 512)
@@ -90,12 +92,23 @@ async function command_draw(interaction, options) {
   }, 1000);
   
   try {
-    const response = await fstabledifxl.generate(input);
+    let response
+    if (kwi_trigger_regex.test(input) && /real/i.test(input) == false) {
+      response = await kwimodule.generate(input);
+    } else {
+      response = await fstabledifxl.generate(input);
+    }
     clearInterval(interval);
     if (response) {
-      console.log("[fstabledifxl] " + input + "\n" + response)
+      if (kwi_trigger_regex.test(input) && /real/i.test(input) == false) {
+        response = await kwimodule.generate(input);
+        console.log("[hfkwi] " + input)
+      } else {
+        response = await fstabledifxl.generate(input);
+        console.log("[fstabledifxl] " + input + "\n" + response)
+      }
       await reply.edit({
-      content: input,
+      content: "`" + input + "`",
         files: [{
           attachment: response,
           name: input.substring(0, 64) + imgnamewatermark + '.png'
