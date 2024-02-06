@@ -1,6 +1,8 @@
 const hspaceurl = process.env['HSPACEURL']
 const fetch = require('node-fetch');
 
+const kwimodule = require("./modules/hf_kwi.js");
+
 let heartbeats = 0
 const ws = require('ws');
 
@@ -43,8 +45,6 @@ const gradio_generate = async (data, fn_index, space_url) => {
           websocket.send(json_data);
         }
         else if (resp.msg === "process_completed") {
-          heartbeats += 1
-          console.log("[HEART] beat " + heartbeats)
           mainResolve(resp.output);
         };
       });
@@ -61,10 +61,14 @@ async function uptimespace(){
       1, 
       hspaceurl
     )
+    const drawing = kwimodule.generate("a") // uptimes kwi space
+    heartbeats += 1
+    console.log("[HEART] beat " + heartbeats)
   } catch (err) {
     console.log("[HEART] ERR " + err)
   }
 }
+
 function systole() {
   uptimespace()
   const pump = setInterval(uptimespace, 900000);
