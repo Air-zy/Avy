@@ -16,6 +16,8 @@ const toText = main_funcs.toText;
 
 const cmdprefix = JSON.parse(fs.readFileSync("json_storage/configs.json"))[0]
   .prefix;
+const authorized_users = JSON.parse(fs.readFileSync("json_storage/configs.json"))[0]
+  .authorized_users;
 const urlRegex = /(https?|ftp):\/\/[^\s/$.?#].[^\s]*/i;
 
 // Functions
@@ -36,24 +38,41 @@ function reverseLines(originalString) {
   return reversedString;
 }
 
+function formatTimestamp(createdTimestamp) {
+  // Convert timestamp to Date object
+  const date = new Date(createdTimestamp);
+
+  // Get individual components of the date
+  const year = date.getFullYear();
+  const month = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(date);
+  const day = date.getDate();
+
+  // Create the formatted date string
+  const formattedDate = `${month} ${day}, ${year}`;
+
+  return formattedDate;
+}
+
 async function getDiscordUser(str) {
   let newstr = str
   newstr = newstr.replace(/[<@!>]/g, '');
   console.log(newstr);
 
-  // Check if the string is a numeric value
   if (!/^\d+$/.test(newstr)) {
     return false;
   }
-
-  // Check if the length of the string is exactly 18 characters
+  
   if (newstr.length < 17 || newstr.length > 20) {
     return false;
   }
   
   try {
     const user = await client.users.fetch(newstr);
-    return user;
+    const jsonObject = {
+      "creation_date": formatTimestamp(user.createdTimestamp),
+    }
+    const jsonString = JSON.stringify(jsonObject, null, 2);
+    return jsonString + "\n" + toText(user);
   } catch {
     return false;
   }
@@ -62,7 +81,8 @@ async function getDiscordUser(str) {
 async function handle_cmds(message) {
   const words = message.content.split(" ");
   const mchannel = message.channel;
-
+  const authorid = toText(message.author.id) // tostring cuz json handle number weirdly
+  
   if (words[0] == cmdprefix + "send" || words[0] == cmdprefix + "dm") {
     const recipient_id = words[1].replace(/\D/g, "");
     const recipient = await client.users.fetch(recipient_id);
@@ -91,8 +111,11 @@ async function handle_cmds(message) {
     });
     //
   } else if (
+    (
     words[0] == cmdprefix + "viewc" ||
     words[0] == cmdprefix + "view_channel"
+    ) &&
+    authorized_users.includes(authorid)
   ) {
     let channelid = words[1];
     if (channelid) {
@@ -157,13 +180,12 @@ async function handle_cmds(message) {
       mchannel.send(`${channelid} not found`);
     }
     //
-  } else if (words[0] == cmdprefix + "vserver") {
+  } else if (words[0] == cmdprefix + "vserver" && authorized_users.includes(authorid)) {
     const search_id = words[1].replace(/\D/g, "");
     const guilds = await client.guilds.fetch();
     let foundguild;
 
     guilds.forEach((guild) => {
-      console.log(toText(guild.id), toText(search_id));
       if (toText(guild.id) == toText(search_id)) {
         foundguild = guild;
       }
@@ -173,20 +195,46 @@ async function handle_cmds(message) {
       let guild_info = "";
       const fetchedguild = await client.guilds.fetch(search_id);
       if (fetchedguild) {
-        console.log(fetchedguild);
-        for (const key in fetchedguild) {
-          if (fetchedguild.hasOwnProperty(key)) {
-            const value = fetchedguild[key];
-            guild_info = guild_info + toText(key) + `: ${value}`;
-            guild_info = guild_info + "\n";
+        guild_info = guild_info + "owner_id" + `: ${fetchedguild.ownerId}\n\n`;
+        guild_info = guild_info + "[CHANNELS]: \n"
+        let fguild_channels = await fetchedguild.channels.fetch();
+        let channelsArray = Array.from(fguild_channels.values());
+        channelsArray.sort((a, b) => {
+          // If both channels have the same parentId, sort based on rawPosition
+          if (a.parentId === b.parentId) {
+            return a.rawPosition - b.rawPosition;
           }
-        }
+
+          // If b has a parentId and it matches a's id, put b after a
+          if (b.parentId === a.id) {
+            return -1;
+          }
+
+            // If a has a parentId and it matches b's id, put a after b
+          if (a.parentId === b.id) {
+            return 1;
+          }
+
+          // Otherwise, sort based on rawPosition
+          return a.rawPosition - b.rawPosition;
+        });
+        channelsArray.forEach((channel) => {
+          if (channel.type == 4) {
+            guild_info = guild_info + "\n\n" + `${channel.name}`;
+          } else if (channel.type == 2) {
+            guild_info = guild_info + "\n 𝄞 " + `${channel.name}` + `, ${channel.type}` + `   *${channel.id}*`;
+          } else {
+            guild_info = guild_info + "\n ◦ " + `${channel.name}` + `, ${channel.type}` + `   *${channel.id}*`;
+          }
+        });
+
       }
 
       const newEmbed = new discordjs.EmbedBuilder()
         .setColor("#DC143C")
         .setTitle(foundguild.name)
         .setDescription(guild_info.substring(0, 4096));
+      
       mchannel.send({
         content: "",
         embeds: [newEmbed],
@@ -203,7 +251,7 @@ async function handle_cmds(message) {
     let count = 0;
     guilds.forEach((guild) => {
       count += 1;
-      desctxt = desctxt + `${guild.name}, ${guild.id}\n`;
+      desctxt = desctxt + `${guild.name} ` + "`" + guild.id + "`\n";
     });
     const newEmbed = new discordjs.EmbedBuilder()
       .setColor("#DC143C")
