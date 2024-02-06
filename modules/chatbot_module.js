@@ -87,11 +87,11 @@ async function send_msg(history){
   //const response = await newGenerate(history, 4)
   try {
     let response = await newGenerate(history, "gpt-3.5-turbo")
-    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("assist with")) { 
+    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("assist with") || response.toLowerCase().includes("i'm sorry") || response.toLowerCase().includes("fulfill")) { 
       console.log("[open_ai fail 1]" + response)
       response = await newGenerate(history, "gpt-3.5-turbo-1106")
     }
-    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("assist with")) {
+    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("assist with") || response.toLowerCase().includes("i'm sorry") || response.toLowerCase().includes("fulfill")) {
       throw "Error " + response;
     }
     return response
