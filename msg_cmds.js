@@ -2,14 +2,13 @@
 
 let client;
 let discordjs;
+let firedb;
 
 const fetch = require("node-fetch");
 const fs = require("fs");
 const os = require("os");
 
 const main_funcs = require("./functions.js");
-const oai_module = require("./modules/open_ai.js");
-const getusage = oai_module.getusage
 const toText = main_funcs.toText;
 
 // Values
@@ -38,6 +37,67 @@ function reverseLines(originalString) {
   return reversedString;
 }
 
+function isIPAddress(input) {
+  // Regular expression to match IPv4 address
+  const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+
+  // Regular expression to match IPv6 address
+  const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,7}:|^[0-9a-fA-F]{1,4}:([0-9a-fA-F]{1,4}:){1,6}|^:((:[0-9a-fA-F]{1,4}){1,6})|^(::){1,7}$/;
+
+  return ipv4Regex.test(input) || ipv6Regex.test(input);
+}
+
+function parseHTML(htmlContent) {
+  // Find the start and end points of the MaxMind section
+  const startMarker = '<a href="#ip_info-geolite2">';
+  const endMarker = 'Powered by <a target="_blank" rel="nofollow" href="https://www.maxmind.com">MaxMind GeoIP</a>';
+
+  const startIndex = htmlContent.indexOf(startMarker);
+  const endIndex = htmlContent.indexOf(endMarker);
+
+  // Extract the MaxMind section using string splicing
+  const htmlSnippet = htmlContent.substring(startIndex, endIndex);
+  
+  // Extracting IP Address
+  const ipAddressRegex = /<strong>([\d.]+)<\/strong>/;
+  const ipAddressMatch = htmlSnippet.match(ipAddressRegex);
+  const ipAddress = ipAddressMatch ? ipAddressMatch[1] : null;
+
+  // Extracting Host Name
+  const hostNameRegex = /<td>Host name<\/td>\s*<td class="break-all">([^<]+)<\/td>/;
+  const hostNameMatch = htmlSnippet.match(hostNameRegex);
+  const hostName = hostNameMatch ? hostNameMatch[1] : null;
+
+  // Extracting Country
+  const countryRegex = /<td>Country<\/td>\s*<td class="break-words">\s*<img class="inline flag" src="\/images\/flags\/[a-z]+\.png" \/>\s*<strong>([^<]+)<\/strong>/;
+  const countryMatch = htmlSnippet.match(countryRegex);
+  const country = countryMatch ? countryMatch[1] : null;
+
+  // Extracting Region
+  const regionRegex = /<td>Region<\/td>\s*<td class="break-all">([^<]+)<\/td>/;
+  const regionMatch = htmlSnippet.match(regionRegex);
+  const region = regionMatch ? regionMatch[1] : null;
+
+  // Extracting City
+  const cityRegex = /<td>City<\/td>\s*<td class="break-all">([^<]+)<\/td>/;
+  const cityMatch = htmlSnippet.match(cityRegex);
+  const city = cityMatch ? cityMatch[1] : null;
+
+  // Extracting Postal Code
+  const postalCodeRegex = /<td>Postal Code<\/td>\s*<td class="break-all">([^<]+)<\/td>/;
+  const postalCodeMatch = htmlSnippet.match(postalCodeRegex);
+  const postalCode = postalCodeMatch ? postalCodeMatch[1] : null;
+
+  return `
+  IP Address: ${ipAddress}
+  Host Name: ${hostName}
+  Country: ${country}
+  Region: ${region}
+  City: ${city}
+  Postal Code: ${postalCode}
+  `;
+}
+
 function formatTimestamp(createdTimestamp) {
   // Convert timestamp to Date object
   const date = new Date(createdTimestamp);
@@ -51,6 +111,17 @@ function formatTimestamp(createdTimestamp) {
   const formattedDate = `${month} ${day}, ${year}`;
 
   return formattedDate;
+}
+
+async function firedbTokenGET() {
+  try {
+    const aTuringRef = await firedb.doc('3rhrsWF9YlhpfZ2y3L7q');
+    const value = await aTuringRef.get();
+    const data = await value.data();
+    return data;
+  } catch(err) {
+    console.log("[FIRE BASE ERR]",err)
+  }
 }
 
 async function getDiscordUser(str) {
@@ -267,7 +338,11 @@ async function handle_cmds(message) {
     if (channel) {
       const messages = await channel.messages.fetch({ limit: 2 });
       const latestMessage = messages.last();
-      await latestMessage.reply(words[2]);
+      const txt = words.slice(2).join(" ");
+      channel.sendTyping();
+      setTimeout(async () => {
+          await latestMessage.reply(txt);
+      }, 4 * 1000);
     } else {
       await message.reply(`no channel found`);
     }
@@ -275,10 +350,14 @@ async function handle_cmds(message) {
     message.content == cmdprefix + "info" ||
     message.content == cmdprefix + "stats"
   ) {
+    const newtokendata = await firedbTokenGET()
+    const total_tokens = parseInt(newtokendata.total_tokens);
+    const prompt_tokens = parseInt(newtokendata.prompt_tokens);
+    const completion_tokens = parseInt(newtokendata.completion_tokens);
+    
     const uptimeValue = formatUptime(client.uptime);
     //let infojson = JSON.parse(fs.readFileSync('json_storage/info.json', 'utf-8'));
     const newEmbed = new discordjs.EmbedBuilder().setColor("#DC143C").addFields(
-      { name: "Bot ID", value: client.user.id, inline: false },
       {
         name: "Platform",
         value: os.platform() + " " + os.release(),
@@ -307,12 +386,13 @@ async function handle_cmds(message) {
           " MB",
         inline: true,
       },
-      { name: "Uptime", value: uptimeValue, inline: false },
-      { name: "Token_Usage", value: toText(getusage()), inline: false }
-    );
-    /*.setDescription(`
-        **hi**
-      `);*/
+      { name: "Uptime", value: uptimeValue, inline: false }
+    )
+    .setDescription(`
+{"total_tokens": ${total_tokens}}
+{"prompt_tokens": ${prompt_tokens}}
+{"completion_tokens": ${completion_tokens}}
+    `);
     mchannel.send({ embeds: [newEmbed] });
     //
   } else if (words[0] == cmdprefix + "analyze") {
@@ -368,6 +448,46 @@ async function handle_cmds(message) {
           }
         }
         trackurl(url, 6); // DEPTH
+
+        const ipftech = await fetch("https://check-host.net/ip-info?host=" + toText(url), {
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "en-CA,en-GB;q=0.9,en-US;q=0.8,en;q=0.7",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-site",
+            "Referer": "https://check-host.net/",
+            "Referrer-Policy": "strict-origin-when-cross-origin"
+          },
+          "body": null,
+          "method": "GET"
+        });
+        const fetchres = await ipftech.text();
+        logtxt = logtxt + "\n```||\n```" + toText(parseHTML(fetchres)) + "```||";
+        await initialmsg.edit({
+          content: "```js\n" + logtxt + "\n",
+        });
+      } else if (isIPAddress(words[1])) {
+        const initialmsg = await mchannel.send({
+          content: "```js\nIP ADRESS: " + words[1] + "\n```",
+        });
+        const ipftech = await fetch("https://check-host.net/ip-info?host=" + toText(words[1]), {
+          "headers": {
+            "accept": "*/*",
+            "accept-language": "en-CA,en-GB;q=0.9,en-US;q=0.8,en;q=0.7",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-site",
+            "Referer": "https://check-host.net/",
+            "Referrer-Policy": "strict-origin-when-cross-origin"
+          },
+          "body": null,
+          "method": "GET"
+        });
+        const fetchres = await ipftech.text();
+        initialmsg.edit({
+          content: "||```\n" + toText(parseHTML(fetchres)) + "\n```||",
+        });
       } else {
         const initialmsg = await mchannel.send({
           content: "```js\n" + words[1] + "\n```",
@@ -384,9 +504,10 @@ async function handle_cmds(message) {
   }
 }
 
-function pass_exports(p_client, p_discordjs) {
+function pass_exports(p_client, p_discordjs, p_firedb) {
   client = p_client;
   discordjs = p_discordjs;
+  firedb = p_firedb;
 }
 
 module.exports = {
