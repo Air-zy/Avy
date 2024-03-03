@@ -1,4 +1,5 @@
 let client;
+let firedb;
 
 const fs = require('fs');
 const imgnamewatermark = JSON.parse(fs.readFileSync('json_storage/configs.json'))[0].img_name_stamp;
@@ -75,10 +76,11 @@ async function command_say(interaction, options) {
   }
 }
 
-const animationFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+const animationFrames = ['[    ]', '[=   ]', '[==  ]', '[=== ]', '[ ===]', '[  ==]', '[   =]'];
 const kwi_trigger_regex = new RegExp(process.env['kwi_trigger'], 'i');
-let currentFrame = 0;
+
 async function command_draw(interaction, options) {
+  let currentFrame = 0;
   const input = toText(options.get('prompt').value).substring(0, 512)
   const reply = await interaction.reply('drawing ' + input);
   const interval = setInterval(async () => {
@@ -89,14 +91,16 @@ async function command_draw(interaction, options) {
       clearInterval(interval);
       return;
     }
-  }, 1000);
+  }, 2000);
   
   try {
     let response
     if (kwi_trigger_regex.test(input) && /real/i.test(input) == false) {
       response = await kwimodule.generate(input);
     } else {
-      response = await fstabledifxl.generate(input);
+      response = await kwimodule.generate(input);
+      //broke
+      //response = await fstabledifxl.generate(input);
     }
     clearInterval(interval);
     if (response) {
@@ -104,8 +108,11 @@ async function command_draw(interaction, options) {
         response = await kwimodule.generate(input);
         console.log("[hfkwi] " + input)
       } else {
-        response = await fstabledifxl.generate(input);
-        console.log("[fstabledifxl] " + input + "\n" + response)
+        response = await kwimodule.generate(input);
+        console.log("[hfkwi] " + input)
+        //broke
+        //response = await fstabledifxl.generate(input);
+        //console.log("[fstabledifxl] " + input + "\n" + response)
       }
       await reply.edit({
       content: "`" + input + "`",
@@ -152,9 +159,10 @@ async function handle_interactions(interaction) {
 }
 
 
-function pass_exports(p_client, p_discordjs) {
+function pass_exports(p_client, p_discordjs, p_firedb) {
   client = p_client;
-  discordjs = p_discordjs;
+  //discordjs = p_discordjs;
+  firedb = p_firedb;
 }
 
 module.exports = {
