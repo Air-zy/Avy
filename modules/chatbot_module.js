@@ -1,5 +1,6 @@
 let client;
 let discordjs;
+let firedb;
 
 const fs = require('fs');
 const axios = require('axios');
@@ -9,13 +10,11 @@ const axios = require('axios');
 const configData = JSON.parse(fs.readFileSync('json_storage/configs.json'));
 const imgnamewatermark = configData[0].img_name_stamp
 const main_funcs = require("../functions");
-const old_generator = require("./hugface_redirect.js");
 const new_generator = require("./open_ai.js");
 
 // Functions
 
 const newGenerate = new_generator.generate
-const oldGenerate = old_generator.generate
 const toText = main_funcs.toText;
 
 const hasCharacter = (inputString) => {
@@ -58,17 +57,32 @@ function messageContentFilter(msg){
   return msgcontent
 }
 
-async function filterresponse(txt) {
-  txt = txt.substring(0, 2000);
+async function filterresponse(txt, prevmessages) {
+  if (typeof txt == 'string') {
+    txt = txt.substring(0, 2000);
 
-  //removes avy double occurances
-  txt = txt.replace(/avy: /gi, "");
-  txt = txt.replace(/{{avy}}: /gi, "");
-  
-  //artifacts
-  txt = txt.replace(/{{/gi, "");
-  
-  return txt
+    //removes avy double occurances
+    txt = txt.replace(/avy: /gi, "");
+    txt = txt.replace(/{{avy}}: /gi, "");
+
+    //artifacts
+    txt = txt.replace(/{{/gi, "");
+    
+    // avy talks like whoever sais
+    prevmessages.forEach((msg) => {
+      if (msg.author.id != client.user.id) {
+        let author_name = getAutherName(msg.author).toLowerCase();
+        if (txt.toLowerCase().includes(author_name + ":")) {
+          txt = txt.split(author_name + ":").join("");
+        }
+      }
+    })
+
+    return txt
+    
+  } else {
+    return txt
+  }
 }
 
 // Main
@@ -87,25 +101,42 @@ async function send_msg(history){
   //const response = await newGenerate(history, 4)
   try {
     let response = await newGenerate(history, "gpt-3.5-turbo")
-    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("assist with") || response.toLowerCase().includes("i'm sorry") || response.toLowerCase().includes("fulfill")) { 
+    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("assist") || response.toLowerCase().includes("response ") || response.toLowerCase().includes("fulfill") || response.toLowerCase().includes("generate") || response.toLowerCase().includes("model") || response.toLowerCase().includes("conversation")) { 
       console.log("[open_ai fail 1]" + response)
       response = await newGenerate(history, "gpt-3.5-turbo-1106")
     }
-    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("assist with") || response.toLowerCase().includes("i'm sorry") || response.toLowerCase().includes("fulfill")) {
-      throw "Error " + response;
+    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("assist") || response.toLowerCase().includes("response ") || response.toLowerCase().includes("fulfill") || response.toLowerCase().includes("generate") || response.toLowerCase().includes("model") || response.toLowerCase().includes("conversation")) {
+      throw response;
     }
     return response
   } catch (err) { 
-    console.log("[OEPN AI FAIL]: ", err)
-    const response = await oldGenerate(history, 4)
-    return response
+    console.log("[OEPN AI FAIL]: ", err);
   }
+}
+
+const replacements = {
+  'fuck': 'f',
+  'bitch': 'bish',
+  'penis': 'pencil',
+  'cock': 'pencil',
+  'rape': 'attack',
+  // Add more bad word replacements as needed
+};
+function filterMsg_Content(msgContent) {
+  let filteredMsg = msgContent;
+  for (const badWord in replacements) {
+    if (Object.prototype.hasOwnProperty.call(replacements, badWord)) {
+      const regex = new RegExp(badWord, 'gi');
+      filteredMsg = filteredMsg.replace(regex, replacements[badWord]);
+    }
+  }
+  return filteredMsg;
 }
 
 async function handle_chat(message) {
   try {
     let auther_name = getAutherName(message.author);
-    const sysprompt = coreprompt.replace(/\?\?\?/g, auther_name)
+    const sysprompt = coreprompt//.replace(/\?\?\?/g, auther_name)
     const mChannel = message.channel;
     const history = [
       {
@@ -117,7 +148,7 @@ async function handle_chat(message) {
     prevmessages = prevmessages.reverse();
     prevmessages.forEach((msg) => {
       //let msg_content = messageContentFilter(msg).substring(0, 256);
-      let msg_content = messageContentFilter(msg).substring(0, 128);
+      let msg_content = filterMsg_Content(messageContentFilter(msg).substring(0, 128));
       if (msg.author.id == client.user.id) {
         history.push(
           {
@@ -143,7 +174,7 @@ async function handle_chat(message) {
       console.log(`(${mChannel.name}) Avy: ` + resposeTxt + '\n');
     }
 
-    let response = await filterresponse(resposeTxt);
+    let response = await filterresponse(resposeTxt, prevmessages);
     if (response && hasCharacter(response)){
       if (mChannel.type == 1){ // dm
         mChannel.send(response);
@@ -161,9 +192,11 @@ async function handle_chat(message) {
   }
 }
 
-function pass_exports(p_client, p_discordjs) {
+function pass_exports(p_client, p_discordjs, p_firedb) {
   client = p_client;
   discordjs = p_discordjs;
+  firedb = p_firedb;
+  new_generator.pass_exports(p_firedb)
 }
 
 module.exports = {
