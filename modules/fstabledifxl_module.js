@@ -34,12 +34,14 @@ async function generate(input) {
     "method": "POST"
   });
 
+  const jtext = await response.text();
+  console.log("text: " + jtext)
   const njson = await response.json();
   if (njson && njson.image){
     const url = `https://huggingface.co/datasets/enzostvs/stable-diffusion-tpu-generations/resolve/main/${njson.image.file_name}.png`
     return url
   } else {
-    return njson
+    throw njson
   }
 }
 
