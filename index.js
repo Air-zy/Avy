@@ -1,6 +1,30 @@
 const fs = require('fs');
+
+// mobile presence
+const filePath = './node_modules/@discordjs/ws/dist/index.js';
+fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+        console.error('[Mobile Presence] Error reading file:', err);
+        return;
+    }
+    const match = data.match(/identifyProperties:\s*{([^}]*)}/);
+    const modifiedData = data.replace(
+      "browser: DefaultDeviceProperty,",
+      'browser: "Discord iOS",'
+    );
+    fs.writeFile(filePath, modifiedData, 'utf8', (err) => {
+        if (err) {
+            console.error('[Mobile Presence] Error writing file:', err);
+            return;
+        }
+        console.log('[Mobile Presence] File modified successfully.');
+    });
+});
+
 const axios = require('axios');
-const discordjs = {Client,GatewayIntentBits,Partials,MessageEmbed} = require("discord.js");
+const discordjs = require("discord.js");
+const { Client, GatewayIntentBits, Partials, MessageEmbed } = discordjs;
+
 
 const runserver = require("./webserver.js");
 const heartpump = require("./heart.js");
@@ -21,26 +45,6 @@ async function getRandomRomanceAnime() {
   const romance_animes = [];
   for (let i = 1; i <= 4; i++) {
     try {
-      const response2 = await axios.get('https://api.jikan.moe/v4/top/anime', {
-        params: {
-          filter: 'bypopularity',
-          rating: 'r17',
-          sfw: true,
-          limit: 25,
-          page: i
-        },
-      });
-
-      const animeList2 = response2.data.data;
-      for (const anime of animeList2) {
-        const hasRomance = anime.genres.some(genre => genre.name == "Romance");
-        if ((hasRomance && anime.score > 7.9) || anime.year > 2020) {
-          romance_animes.push(anime);
-        }
-      }
-      
-      //
-      
       const response = await axios.get('https://api.jikan.moe/v4/top/anime', {
         params: {
           filter: 'bypopularity',
@@ -54,7 +58,28 @@ async function getRandomRomanceAnime() {
       const animeList = response.data.data;
       for (const anime of animeList) {
         const hasRomance = anime.genres.some(genre => genre.name == "Romance");
-        if ((hasRomance && anime.score > 7.9) || anime.year > 2021) {
+        if ((hasRomance && anime.score > 7) || (anime.year > 2021 && anime.score > 7)) {
+          //console.log(anime.title)
+          romance_animes.push(anime);
+        }
+      }
+      
+      //
+      
+      const response2 = await axios.get('https://api.jikan.moe/v4/top/anime', {
+        params: {
+          filter: 'bypopularity',
+          rating: 'r17',
+          sfw: true,
+          limit: 25,
+          page: i
+        },
+      });
+
+      const animeList2 = response2.data.data;
+      for (const anime of animeList2) {
+        const hasRomance = anime.genres.some(genre => genre.name == "Romance");
+        if ((hasRomance && anime.score > 7) || (anime.year > 2020 && anime.score > 7)) {
           romance_animes.push(anime);
         }
       }
@@ -122,9 +147,6 @@ heartpump()
 
 client.on("ready", async () => {
   console.log(`[DISCORD BOT] connected ${client.user.tag}`);
-  chatbot_mod.pass_exports(client, discordjs);
-  main_funcs.pass_exports(client, discordjs);
-  cmd_funcs.pass_exports(client, discordjs);
 
   const registeredCmds = await client.application.commands.fetch();
   const commands = JSON.parse(fs.readFileSync('json_storage/discord_commands.json'));
@@ -165,7 +187,7 @@ client.on('messageCreate', async (message) => {
   userTimeouts.set(message.author.id, true);
 
   if (message.channel.type === 1){
-    console.log(`(dm) ${message.author.username}: ${message.content}`);
+    console.log(`(DM) ${message.author.username}: ${message.content}`);
   }
 
   const msg_channel = message.channel
@@ -199,3 +221,22 @@ client.on('interactionCreate', async (interaction) => {
   if (!interaction.isCommand()) return;
   main_funcs.handle_interactions(interaction);  
 });
+
+const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
+const { getFirestore, Timestamp, FieldValue, Filter } = require('firebase-admin/firestore');
+
+const serviceAccount = JSON.parse(process.env.firebaseJsonKey)
+const firebaseApp = initializeApp({
+  credential: cert(serviceAccount)
+});
+
+const db = getFirestore().collection('tokenUsage');
+chatbot_mod.pass_exports(client, discordjs, db);
+main_funcs.pass_exports(client, discordjs, db);
+cmd_funcs.pass_exports(client, discordjs, db);
+
+if (firebaseApp) {
+  console.log("[FIRE BASE] ready");
+} else {
+  console.log("[FIRE BASE ERR] failed");
+}
