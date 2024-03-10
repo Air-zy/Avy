@@ -1,3 +1,5 @@
+console.log("[AVY] starting")
+
 const fs = require('fs');
 
 // mobile presence
@@ -7,11 +9,20 @@ fs.readFile(filePath, 'utf8', (err, data) => {
         console.error('[Mobile Presence] Error reading file:', err);
         return;
     }
-    const match = data.match(/identifyProperties:\s*{([^}]*)}/);
+
+    // Check if the browser is already set to "Discord iOS"
+    if (data.includes('browser: "Discord iOS",')) {
+        console.log('[Mobile Presence] File already modified. No action needed.');
+        return;
+    }
+
+    // Replace the browser string
     const modifiedData = data.replace(
-      "browser: DefaultDeviceProperty,",
-      'browser: "Discord iOS",'
+        'browser: DefaultDeviceProperty,',
+        'browser: "Discord iOS",'
     );
+
+    // Write the modified data back to the file
     fs.writeFile(filePath, modifiedData, 'utf8', (err) => {
         if (err) {
             console.error('[Mobile Presence] Error writing file:', err);
@@ -101,15 +112,21 @@ async function getRandomRomanceAnime() {
   }
 }
 
+function halfChance() {
+    return Math.random() < 0.5;
+}
+
 async function isTalkingToBot(msg) {
   const msgtxt = msg.content.toLowerCase();
   if (
     msg.channel.type === 1 ||
     msgtxt.includes(client.user.id) ||
-    msgtxt.includes("everyone") ||
-    msgtxt.includes("i hate") ||
-    msgtxt.includes("i love") ||
-    msgtxt.includes("damn") ||
+    halfChance() && msgtxt.includes("everyone") ||
+    halfChance() && msgtxt.includes("i hate") ||
+    halfChance() && msgtxt.includes("i love") ||
+    halfChance() && msgtxt.includes("damn") ||
+    halfChance() && msgtxt.includes("dang") ||
+    halfChance() && msgtxt.includes("im so") ||
     msgtxt.includes(" avy") ||
     msgtxt.includes("avy ") ||
     msgtxt.includes("avy,") ||
@@ -187,7 +204,7 @@ client.on('messageCreate', async (message) => {
   userTimeouts.set(message.author.id, true);
 
   if (message.channel.type === 1){
-    console.log(`(DM) ${message.author.username}: ${message.content}`);
+    console.log(`(dm) ${message.author.username}: ${message.content}`);
   }
 
   const msg_channel = message.channel
