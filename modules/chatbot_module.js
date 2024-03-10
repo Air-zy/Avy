@@ -71,8 +71,8 @@ async function filterresponse(txt, prevmessages) {
     // avy talks like whoever sais
     prevmessages.forEach((msg) => {
       if (msg.author.id != client.user.id) {
-        let author_name = getAutherName(msg.author).toLowerCase();
-        if (txt.toLowerCase().includes(author_name + ":")) {
+        let author_name = getAutherName(msg.author);
+        if (txt.toLowerCase().includes(author_name.toLowerCase() + ":")) {
           txt = txt.split(author_name + ":").join("");
         }
       }
@@ -90,7 +90,6 @@ const AIName = "Avy";
 
 // Avoid embarrassment
 const coreprompt = process.env['SystemPrompt'].replace(/CHAR/g, AIName)
-
 const apiurl = 'https://api.wzunjh.top/v1/chat/completions'
 const headers = {
   "Content-Type": "application/json",
@@ -101,11 +100,11 @@ async function send_msg(history){
   //const response = await newGenerate(history, 4)
   try {
     let response = await newGenerate(history, "gpt-3.5-turbo")
-    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("assist") || response.toLowerCase().includes("response ") || response.toLowerCase().includes("fulfill") || response.toLowerCase().includes("generate") || response.toLowerCase().includes("model") || response.toLowerCase().includes("conversation")) { 
+    if (response.toLowerCase().includes("i cannot") || response.includes("Sorry, but") || response.toLowerCase().includes("assist") || response.toLowerCase().includes("response ") || response.toLowerCase().includes("fulfill") || response.toLowerCase().includes("generate") || response.toLowerCase().includes("model") || (response.toLowerCase().includes("conversation") && response.toLowerCase().includes("sorry"))) { 
       console.log("[open_ai fail 1]" + response)
       response = await newGenerate(history, "gpt-3.5-turbo-1106")
     }
-    if (response.toLowerCase().includes("i cannot") || response.toLowerCase().includes("assist") || response.toLowerCase().includes("response ") || response.toLowerCase().includes("fulfill") || response.toLowerCase().includes("generate") || response.toLowerCase().includes("model") || response.toLowerCase().includes("conversation")) {
+    if (response.toLowerCase().includes("i cannot") || response.includes("Sorry, but") || response.toLowerCase().includes("assist") || response.toLowerCase().includes("response ") || response.toLowerCase().includes("fulfill") || response.toLowerCase().includes("generate") || response.toLowerCase().includes("model") || (response.toLowerCase().includes("conversation") && response.toLowerCase().includes("sorry"))) {
       throw response;
     }
     return response
@@ -118,7 +117,9 @@ const replacements = {
   'fuck': 'f',
   'bitch': 'bish',
   'penis': 'pencil',
+  'dick': 'pencil',
   'cock': 'pencil',
+  'cum': 'splash',
   'rape': 'attack',
   // Add more bad word replacements as needed
 };
@@ -134,26 +135,36 @@ function filterMsg_Content(msgContent) {
 }
 
 async function handle_chat(message) {
+  /*if (message && message.guild && message.channel.permissionsFor(message.guild.me)) {
+  } else {
+    if (message.channel.type != 1){
+      console.log("-no msg-");
+      return;
+    }
+  }*/
   try {
     let auther_name = getAutherName(message.author);
     const sysprompt = coreprompt//.replace(/\?\?\?/g, auther_name)
     const mChannel = message.channel;
-    const history = [
-      {
-        role: "system",
-        content: sysprompt
-      },
-    ];
-    let prevmessages = await message.channel.messages.fetch({ limit: 17 });
+    
+    let systemMessage = {
+      role: "system",
+      content: sysprompt
+    }
+    const history = [systemMessage];
+    const systemInject = "";
+    
+    let prevmessages = await message.channel.messages.fetch({ limit: 15 });
     prevmessages = prevmessages.reverse();
     prevmessages.forEach((msg) => {
       //let msg_content = messageContentFilter(msg).substring(0, 256);
-      let msg_content = filterMsg_Content(messageContentFilter(msg).substring(0, 128));
+      const msgv = messageContentFilter(msg).substring(0, 128)
+      const msg_content = filterMsg_Content(msgv);
       if (msg.author.id == client.user.id) {
         history.push(
           {
             role: 'assistant',
-            content: AIName + ": " + msg_content
+            content: msg_content
           }
         );
       } else {
@@ -163,9 +174,20 @@ async function handle_chat(message) {
             content: getAutherName(msg.author) + ": " + msg_content
           }
         );
+        if (
+          msgv.toLowerCase().includes("fuck you") ||
+          msgv.toLowerCase().includes("fuck u") ||
+          msgv.toLowerCase().includes("ur bad") ||
+          msgv.toLowerCase().includes("ur ugly") ||
+          msgv.toLowerCase().includes("bitch")
+        ) {
+          if (systemMessage.content == sysprompt){
+            systemMessage.content += ". program an insult back";
+          }
+        }
       }
     })
-
+    
     mChannel.sendTyping();
     let resposeTxt = await send_msg(history);
     if (mChannel.type == 1){
