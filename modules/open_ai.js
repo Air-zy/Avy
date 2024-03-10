@@ -44,38 +44,43 @@ async function generate(msgs, aimodel) {
     "messages": msgs,
     "model": aimodel,
     "temperature": 1,
-    "presence_penalty": 0.9,
-    "frequency_penalty": 1.5,
+    "presence_penalty": 1,
+    "frequency_penalty": 1.5,//1.5,
     "top_p": 0.8,
     "logit_bias": {
-        "5781": 1, // avy
-        "68697": -100, // sorry
-        "19701": -100, // Sorry
+        "7976": 2, // ( fuck)
+        "16585": 2, // (pussy)
+        "14931": -1, // ( sorry)
+        "33386": -1, // ( Sorry)
+        "68697": -1, // sorry
+        "19701": -1, // Sorry
         "3923": -50, // What
         "19182": -50, // Hey
+        "1520": -100, // ( help)
         "8823": -100, // help
         "52066": -100, // assist
+        "7945": -100, // ( assist)
+        "49150": -100, // ( respectful)
         "34360": -100, // cannot
         "58369": -50, // digital
         "26752": -50, // virtual
         "82630": -50, // friendly
         "47916": -50, // Whatever
         "69386": -50, // whatever
-        "1480": 5, // Error
+        "1480": 4, // Error
         "31": -100, // @
         "93": 1, // ~
-        "2727": 5, //me
-        "2201": 5, // no
+        "9": 1, // *
+        "2771": 2, // (sure)
+        "27075": 2, // ( dick)
         "596": -10, // 's
         "19643": 5, // sure
         "9336": 5, // well
         "2079": -50, // request
         "29589": -50, // :)
-        "9": 1, // *
+        "18754": 1, // ( stupid)
         "0": -1, // !
         "30": -1, // ?
-        "43012": -1, // (playing)
-        "3235": -1, // ( along)
         "19770": 1 // 418
     }
   }
