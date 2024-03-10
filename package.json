@@ -12,9 +12,9 @@
   },
   "dependencies": {
     "@discordjs/ws": "^1.0.2",
+    "discord.js": "^14.14.1",
     "@types/node": "^18.0.6",
     "axios": "^1.6.6",
-    "discord.js": "^14.14.1",
     "express": "^4.18.2",
     "firebase-admin": "^12.0.0",
     "node-fetch": "^2.7.0"
